@@ -1,8 +1,11 @@
-
 import React from 'react';
 import { EMPLOYEES } from '../constants';
 import { Employee, UserRole } from '../types';
 import DashboardCard from './DashboardCard';
+
+interface ScrumMasterDashboardProps {
+  currentUser: Employee;
+}
 
 const TeamMemberCard: React.FC<{ member: Employee }> = ({ member }) => (
   <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border border-slate-200">
@@ -22,15 +25,20 @@ const TeamMemberCard: React.FC<{ member: Employee }> = ({ member }) => (
   </div>
 );
 
-const ScrumMasterDashboard: React.FC = () => {
+const ScrumMasterDashboard: React.FC<ScrumMasterDashboardProps> = ({ currentUser }) => {
   // Assuming the logged-in scrum master is Liam, who is on team_alpha
-  const teamMembers = EMPLOYEES.filter(e => e.teamId === 'team_alpha' && e.role === UserRole.Employee);
+  // In a real app, this would fetch data based on currentUser.teamId
+  const teamMembers = EMPLOYEES.filter(e => e.teamId === currentUser.teamId && e.role === UserRole.Employee);
   
   return (
     <div>
-        <DashboardCard title="Team Standup View: Alpha Squad">
+        <DashboardCard title={`Team Standup View: ${currentUser.teamId === 'team_alpha' ? 'Alpha Squad' : 'Your Team'}`}>
             <div className="space-y-4">
-                {teamMembers.map(member => <TeamMemberCard key={member.id} member={member} />)}
+                {teamMembers.length > 0 ? (
+                  teamMembers.map(member => <TeamMemberCard key={member.id} member={member} />)
+                ) : (
+                  <p className="text-slate-500 text-center">No team members found for your team.</p>
+                )}
             </div>
         </DashboardCard>
     </div>

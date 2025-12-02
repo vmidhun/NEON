@@ -1,9 +1,13 @@
-
 import React from 'react';
 import DashboardCard from './DashboardCard';
 import { JOBS, PROJECTS, CLIENTS } from '../constants';
+import { Employee } from '../types';
 
-const AdminDashboard: React.FC = () => {
+interface AdminDashboardProps {
+  currentUser: Employee;
+}
+
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentUser }) => {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <DashboardCard title="Module Configuration">

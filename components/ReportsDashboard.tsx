@@ -1,8 +1,12 @@
-
 import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import DashboardCard from './DashboardCard';
 import { PROJECTS } from '../constants';
+import { Employee } from '../types';
+
+interface ReportsDashboardProps {
+  currentUser: Employee;
+}
 
 const data = [
   { name: PROJECTS[0].name, value: 400 },
@@ -12,7 +16,7 @@ const data = [
 ];
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
-const ReportsDashboard: React.FC = () => {
+const ReportsDashboard: React.FC<ReportsDashboardProps> = ({ currentUser }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <DashboardCard title="Project Hours Distribution (This Month)">

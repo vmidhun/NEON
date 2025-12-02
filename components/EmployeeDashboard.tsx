@@ -1,14 +1,17 @@
-
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Task, TimeLog, TaskStatus } from '../types';
+import { Task, TimeLog, TaskStatus, Employee } from '../types';
 import { ALL_TASKS, REQUIRED_DAILY_HOURS, ClockIcon, SparklesIcon, CheckCircleIcon, ArrowRightOnRectangleIcon } from '../constants';
 import DashboardCard from './DashboardCard';
 import TaskItem from './TaskItem';
 import TimeLogModal from './TimeLogModal';
 import { suggestDailyPlan } from '../services/geminiService';
 
-const EmployeeDashboard: React.FC = () => {
+interface EmployeeDashboardProps {
+  currentUser: Employee;
+}
+
+const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ currentUser }) => {
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [checkInTime, setCheckInTime] = useState<Date | null>(null);
   const [dailyPlan, setDailyPlan] = useState<Task[]>([]);
@@ -46,7 +49,7 @@ const EmployeeDashboard: React.FC = () => {
     setIsLoadingAiPlan(true);
     setAiError(null);
     try {
-      const suggestedPlan = await suggestDailyPlan(ALL_TASKS);
+      const suggestedPlan = await suggestDailyPlan(ALL_TASKS); // In a real app, this would be filtered by currentUser
       const newPlan = suggestedPlan.map(p => {
         const originalTask = ALL_TASKS.find(t => t.id === p.id);
         return originalTask ? { ...originalTask, allocatedHours: p.allocatedHours ?? 0, status: TaskStatus.ToDo } : null;
@@ -120,7 +123,7 @@ const EmployeeDashboard: React.FC = () => {
               <p className="text-slate-500">
                 {isCheckedIn && checkInTime
                   ? `Checked in at ${checkInTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-                  : "Welcome! Let's get your day started."}
+                  : `Welcome, ${currentUser.name}! Let's get your day started.`}
               </p>
             </div>
             {!isCheckedIn ? (
