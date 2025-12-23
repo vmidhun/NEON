@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { UserRole, Employee } from './types';
 import Header from './components/Header';
+import Sidebar from './components/Sidebar';
 import EmployeeDashboard from './components/EmployeeDashboard';
 import ScrumMasterDashboard from './components/ScrumMasterDashboard';
 import ReportsDashboard from './components/ReportsDashboard';
 import AdminDashboard from './components/AdminDashboard';
+import ProjectsPage from './components/ProjectsPage';
+import TasksPage from './components/TasksPage';
+import TeamPage from './components/TeamPage';
+import ReportsPage from './components/ReportsPage';
+import SettingsPage from './components/SettingsPage';
 import LoginPage from './LoginPage';
 import { AuthProvider, useAuth } from './AuthContext';
 
@@ -12,6 +18,7 @@ const MainAppContent: React.FC = () => {
   const { user, isLoggedIn } = useAuth();
   const availableRoles = [UserRole.Employee, UserRole.ScrumMaster, UserRole.HR, UserRole.Admin];
   const [currentViewRole, setCurrentViewRole] = useState<UserRole>(user?.role || UserRole.Employee);
+  const [currentPage, setCurrentPage] = useState('dashboard');
 
   useEffect(() => {
     if (user && user.role !== currentViewRole) {
@@ -22,9 +29,19 @@ const MainAppContent: React.FC = () => {
   const handleRoleChange = (role: UserRole) => {
     setCurrentViewRole(role);
   };
-  
-  const renderDashboard = () => {
+
+  const handleNavigate = (page: string) => {
+    setCurrentPage(page);
+  };
+
+  const renderContent = () => {
     if (!user) return null;
+
+    if (currentPage === 'projects') return <ProjectsPage />;
+    if (currentPage === 'tasks') return <TasksPage />;
+    if (currentPage === 'team') return <TeamPage />;
+    if (currentPage === 'reports') return <ReportsPage />;
+    if (currentPage === 'settings') return <SettingsPage currentUserRole={currentViewRole} />;
 
     switch (currentViewRole) {
       case UserRole.Employee:
@@ -45,17 +62,24 @@ const MainAppContent: React.FC = () => {
   }
 
   return (
-    <>
-      <Header 
+    <div className="flex min-h-screen bg-slate-50">
+      <Sidebar
+        currentRole={currentViewRole}
+        activePage={currentPage}
+        onNavigate={handleNavigate}
+      />
+      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
+        <Header
         currentUser={user}
         availableRoles={availableRoles}
         onRoleChange={handleRoleChange}
         currentViewRole={currentViewRole}
       />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-        {renderDashboard()}
-      </main>
-    </>
+        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+          {renderContent()}
+        </main>
+      </div>
+    </div>
   );
 };
 

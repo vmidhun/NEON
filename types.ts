@@ -49,7 +49,11 @@ export interface TimeLog {
 export interface Employee {
     id: string;
     name: string;
+    email: string;
     role: UserRole;
     avatarUrl: string;
     teamId: string;
+    designation?: string;
+    hierarchyLevel?: number;
+    reportingManagerId?: string;
 }

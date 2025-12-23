@@ -35,6 +35,7 @@ const LoginPage: React.FC = () => {
       const user: Employee = {
         id: data.user.id,
         name: data.user.name,
+        email: data.user.email,
         role: data.user.role as UserRole,
         avatarUrl: data.user.avatarUrl,
         teamId: data.user.teamId,

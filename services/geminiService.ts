@@ -9,7 +9,7 @@ export const suggestDailyPlan = async (tasks: Task[]): Promise<Partial<Task>[]> 
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/gemini/suggest-plan`, {
+    const response = await fetch(`${API_BASE_URL}/tasks/suggest-plan`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
