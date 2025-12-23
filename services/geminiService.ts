@@ -1,4 +1,5 @@
 import { Task } from "../types";
+import { API_BASE_URL } from "../AuthContext";
 
 export const suggestDailyPlan = async (tasks: Task[]): Promise<Partial<Task>[]> => {
   const token = localStorage.getItem('jwtToken');
@@ -8,11 +9,11 @@ export const suggestDailyPlan = async (tasks: Task[]): Promise<Partial<Task>[]> 
   }
 
   try {
-    const response = await fetch('https://neoback-end.vercel.app/api/gemini/suggest-plan', { // Updated endpoint
+    const response = await fetch(`${API_BASE_URL}/gemini/suggest-plan`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` // Include JWT token
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({ tasks }),
     });
@@ -24,13 +25,12 @@ export const suggestDailyPlan = async (tasks: Task[]): Promise<Partial<Task>[]> 
 
     const suggestedPlan = await response.json();
 
-    // We only trust 'id' and 'allocatedHours' from the backend response
     return suggestedPlan.map((p: any) => ({
         id: p.id,
         allocatedHours: p.allocatedHours
     }));
   } catch (error) {
     console.error("Error generating daily plan via backend:", error);
-    throw new Error("Failed to generate a daily plan. The backend AI service may be unavailable or misconfigured. " + (error instanceof Error ? error.message : ""));
+    throw new Error("Failed to generate a daily plan. " + (error instanceof Error ? error.message : ""));
   }
 };
