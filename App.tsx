@@ -3,12 +3,13 @@ import { UserRole, Employee } from './types';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import EmployeeDashboard from './components/EmployeeDashboard';
-import ScrumMasterDashboard from './components/ScrumMasterDashboard';
+import ManagerDashboard from './components/ManagerDashboard';
 import ReportsDashboard from './components/ReportsDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import ProjectsPage from './components/ProjectsPage';
 import TasksPage from './components/TasksPage';
 import TeamPage from './components/TeamPage';
+import LeavePage from './components/LeavePage';
 import ReportsPage from './components/ReportsPage';
 import SettingsPage from './components/SettingsPage';
 import LoginPage from './LoginPage';
@@ -16,7 +17,7 @@ import { AuthProvider, useAuth } from './AuthContext';
 
 const MainAppContent: React.FC = () => {
   const { user, isLoggedIn } = useAuth();
-  const availableRoles = [UserRole.Employee, UserRole.ScrumMaster, UserRole.HR, UserRole.Admin];
+  const availableRoles = [UserRole.Employee, UserRole.Manager, UserRole.HR, UserRole.Admin];
   const [currentViewRole, setCurrentViewRole] = useState<UserRole>(user?.role || UserRole.Employee);
   const [currentPage, setCurrentPage] = useState('dashboard');
 
@@ -40,14 +41,15 @@ const MainAppContent: React.FC = () => {
     if (currentPage === 'projects') return <ProjectsPage />;
     if (currentPage === 'tasks') return <TasksPage />;
     if (currentPage === 'team') return <TeamPage />;
+    if (currentPage === 'leaves') return <LeavePage />;
     if (currentPage === 'reports') return <ReportsPage />;
     if (currentPage === 'settings') return <SettingsPage currentUserRole={currentViewRole} />;
 
     switch (currentViewRole) {
       case UserRole.Employee:
         return <EmployeeDashboard currentUser={user} />;
-      case UserRole.ScrumMaster:
-        return <ScrumMasterDashboard currentUser={user} />;
+      case UserRole.Manager:
+        return <ManagerDashboard currentUser={user} />;
       case UserRole.HR:
         return <ReportsDashboard currentUser={user} />;
       case UserRole.Admin:

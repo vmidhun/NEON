@@ -3,7 +3,7 @@ import { EMPLOYEES } from '../constants';
 import { Employee, UserRole } from '../types';
 import DashboardCard from './DashboardCard';
 
-interface ScrumMasterDashboardProps {
+interface ManagerDashboardProps {
   currentUser: Employee;
 }
 
@@ -25,7 +25,7 @@ const TeamMemberCard: React.FC<{ member: Employee }> = ({ member }) => (
   </div>
 );
 
-const ScrumMasterDashboard: React.FC<ScrumMasterDashboardProps> = ({ currentUser }) => {
+const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ currentUser }) => {
   // Assuming the logged-in scrum master is Liam, who is on team_alpha
   // In a real app, this would fetch data based on currentUser.teamId
   const teamMembers = EMPLOYEES.filter(e => e.teamId === currentUser.teamId && e.role === UserRole.Employee);
@@ -45,4 +45,4 @@ const ScrumMasterDashboard: React.FC<ScrumMasterDashboardProps> = ({ currentUser
   );
 };
 
-export default ScrumMasterDashboard;
+export default ManagerDashboard;

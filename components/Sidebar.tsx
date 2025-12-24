@@ -1,5 +1,5 @@
-import React from 'react';
 import { HomeIcon, FolderIcon, ClipboardIcon, UserGroupIcon, ChartBarIcon, CogIcon } from '../constants';
+import { Calendar } from 'lucide-react';
 import { UserRole } from '../types';
 
 interface SidebarProps {
@@ -14,6 +14,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentRole, activePage, onNavigate }
     { name: 'Projects', icon: FolderIcon, id: 'projects' },
     { name: 'Tasks', icon: ClipboardIcon, id: 'tasks' },
     { name: 'Team', icon: UserGroupIcon, id: 'team' },
+    { name: 'Leaves', icon: Calendar, id: 'leaves' },
     { name: 'Reports', icon: ChartBarIcon, id: 'reports' },
     { name: 'Settings', icon: CogIcon, id: 'settings' },
   ];

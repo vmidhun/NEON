@@ -9,6 +9,21 @@ const getHeaders = () => {
 };
 
 export const api = {
+    // Uploads
+    uploadFile: async (file: File) => {
+        const formData = new FormData();
+        formData.append('image', file);
+        const res = await fetch(`${API_BASE_URL}/upload/image`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
+                // Content-Type is set automatically for FormData
+            },
+            body: formData
+        });
+        if (!res.ok) throw new Error('Failed to upload file');
+        return res.json();
+    },
     // Projects
     getProjects: async () => {
         const res = await fetch(`${API_BASE_URL}/projects`, { headers: getHeaders() });
@@ -140,5 +155,45 @@ export const api = {
     getJobs: async () => {
         const res = await fetch(`${API_BASE_URL}/jobs`, { headers: getHeaders() });
         return res.ok ? res.json() : [];
-    }
+    },
+
+    // --- Leave Management ---
+    applyLeave: async (data: { leaveType: string, startDate: string, endDate: string, reason: string }) => {
+        const res = await fetch(`${API_BASE_URL}/leaves/apply`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error('Failed to apply leave');
+        return res.json();
+    },
+    getMyLeaves: async () => {
+        const res = await fetch(`${API_BASE_URL}/leaves/my`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed to fetch my leaves');
+        return res.json();
+    },
+    getMyBalance: async () => {
+        const res = await fetch(`${API_BASE_URL}/leaves/balance/my`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed to fetch balance');
+        return res.json();
+    },
+    getPendingLeaves: async () => {
+        const res = await fetch(`${API_BASE_URL}/leaves/pending`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed to fetch pending leaves');
+        return res.json();
+    },
+    updateLeaveStatus: async (id: string, status: 'Approved' | 'Rejected', rejectionReason?: string) => {
+        const res = await fetch(`${API_BASE_URL}/leaves/${id}/status`, {
+            method: 'PUT',
+            headers: getHeaders(),
+            body: JSON.stringify({ status, rejectionReason }),
+        });
+        if (!res.ok) throw new Error('Failed to update leave status');
+        return res.json();
+    },
+    getTeamLeaves: async () => {
+        const res = await fetch(`${API_BASE_URL}/leaves/calendar`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed to fetch team leaves');
+        return res.json();
+    },
 };
