@@ -10,6 +10,8 @@ import ProjectsPage from './components/ProjectsPage';
 import TasksPage from './components/TasksPage';
 import TeamPage from './components/TeamPage';
 import LeavePage from './components/LeavePage';
+import TimesheetPage from './components/TimesheetPage';
+import StandupPage from './components/StandupPage';
 import ReportsPage from './components/ReportsPage';
 import SettingsPage from './components/SettingsPage';
 import LoginPage from './LoginPage';
@@ -40,6 +42,8 @@ const MainAppContent: React.FC = () => {
 
     if (currentPage === 'projects') return <ProjectsPage />;
     if (currentPage === 'tasks') return <TasksPage />;
+    if (currentPage === 'timesheets') return <TimesheetPage />;
+    if (currentPage === 'standup') return <StandupPage />;
     if (currentPage === 'team') return <TeamPage />;
     if (currentPage === 'leaves') return <LeavePage />;
     if (currentPage === 'reports') return <ReportsPage />;
@@ -47,7 +51,7 @@ const MainAppContent: React.FC = () => {
 
     switch (currentViewRole) {
       case UserRole.Employee:
-        return <EmployeeDashboard currentUser={user} />;
+        return <EmployeeDashboard currentUser={user} onNavigate={handleNavigate} />;
       case UserRole.Manager:
         return <ManagerDashboard currentUser={user} />;
       case UserRole.HR:

@@ -1,84 +1,116 @@
-# NEO Timesheet & Project Management
+# NEO Company Management System
 
-A sophisticated platform for time and project management, emphasizing a world-class user experience. It streamlines daily employee workflows, provides proactive planning for managers, and generates actionable reports.
+NEO is a comprehensive Enterprise Resource Planning (ERP) platform designed to streamline workforce management, project tracking, and HR operations. It combines world-class UX with powerful administration tools to support organizations of varying complexities.
 
-## Table of Contents
-- [Features](#features)
-  - [User Roles & Dashboards](#user-roles--dashboards)
-  - [Employee Dashboard](#employee-dashboard)
-  - [Scrum Master Dashboard](#scrum-master-dashboard)
-  - [Reports Dashboard (HR/Admin)](#reports-dashboard-hradmin)
-  - [Admin Dashboard](#admin-dashboard)
-- [Technologies Used](#technologies-used)
-- [Setup and Installation](#setup-and-installation)
-- [AI Integration (Google Gemini API)](#ai-integration-google-gemini-api)
+## 🌟 Key Features
 
-## Features
+### 🏢 HR & Policy Administration
+*   **Leave Policy Management**: configurable leave types (e.g., Annual, Sick, Casual) with annual quotas, carry-over rules, and paid/unpaid status.
+*   **Work Calendar Configuration**: Define multiple work calendars (e.g., "Standard", "US Support", "Part-Time") with custom working days (Mon-Fri, Sun-Thu, etc.) and region-specific holidays.
+*   **User Management**: centralized directory for managing employees, roles, profiles, and team hierarchies.
 
-### User Roles & Dashboards
-The application supports multiple user roles, each with a tailored dashboard experience:
-*   **Employee:** Manages personal tasks, logs time, and checks daily progress.
-*   **Scrum Master:** Oversees team activities and progress.
-*   **HR:** Generates reports and manages leave.
-*   **Admin:** Configures system modules and master data.
+### 📅 Project & Time Tracking
+*   **Project Management**: Manage Clients, Projects, and Jobs.
+*   **Advanced Configuration**: Link Projects to specific **Work Calendars** to enforce schedule rules and configure **Timesheet Policies** (Weekly/Bi-Weekly/Monthly submissions, Client Approval requirements).
+*   **Task Management**: Create and assign tasks with hour allocations.
+*   **Time Logging**: Employees can log time against assigned tasks with notes.
 
-### Employee Dashboard
-*   **Check-in/Check-out:** Start and end the workday, tracking total time.
-*   **AI-Powered Daily Plan:** Utilize the Gemini API to generate a suggested daily work plan, allocating hours to pending tasks based on an 8-hour workday and project priorities.
-*   **Task Management:** View assigned tasks, log hours, and update task statuses (To Do, In Progress, Completed).
-*   **Time Logging Modal:** A dedicated interface for logging hours with notes, showing allocated vs. logged hours and progress.
-*   **Hours Summary:** A visual bar chart comparing logged hours against required daily hours (8 hours).
-*   **Leave Balance:** Displays current annual, sick, and casual leave balances.
+### ⏱️ Timesheet Management
+*   **Employee Portal**:
+    *   View weekly timesheet periods.
+    *   Real-time validation against the project's work calendar (e.g., "Logged 35h, Required 40h").
+    *   One-click submission for approval.
+*   **Manager Approval**: Dashboard for managers to review, approve, or reject submitted timesheets with comments.
 
-### Scrum Master Dashboard
-*   **Team Standup View:** Provides an overview of team members' check-in status and daily progress (logged hours vs. required).
-*   **Progress Tracking:** Visual representation of each team member's logged hours against their daily target.
+### 👥 Role-Specific Dashboards
+*   **Employee**: Personal task list, "Who's on Leave" widget, daily plan suggestions, and leave balance summary.
+*   **Manager**: Team overview, member activity tracking, and approval queues for leaves and timesheets.
+*   **HR**: Organization-wide reports, leave balance tracking, and compliance tools.
+*   **Admin**: Full system control, module toggles, and master data management.
 
-### Reports Dashboard (HR/Admin)
-*   **Project Hours Distribution:** A pie chart visualizing how hours are distributed across different projects for a given month.
-*   **Timesheet Generation:** A form to generate various types of timesheets (Client-based, Project-based, Individual) for specified date ranges.
-*   **Export Functionality:** Option to export generated timesheets as PDF.
+### 🤖 AI Integration
+*   **Smart Planning**: Powered by **Google Gemini 1.5 Flash**, the system analyzes an employee's pending tasks and suggests an optimal daily schedule to meet the 8-hour workday goal.
 
-### Admin Dashboard
-*   **Module Configuration:** Toggle the availability of core platform modules like Time & Attendance, Leave Management, and Payroll Integration.
-*   **Master Data Management:** Interfaces to manage foundational data such as Clients, Projects, and Jobs.
+---
 
-## Technologies Used
-*   **Frontend:** React, TypeScript
-*   **Styling:** Tailwind CSS
-*   **Charting:** Recharts
-*   **AI:** Google Gemini API SDK (`@google/genai`)
-*   **Module Bundling:** ES Modules with `esm.sh` for dependencies.
+## 🛠️ Technology Stack
 
-## Setup and Installation
+**Frontend**
+*   **Framework**: React 18 with TypeScript
+*   **Build Tool**: Vite
+*   **Styling**: Tailwind CSS
+*   **Icons**: Lucide React
+*   **Charts**: Recharts
 
-To run this application locally, follow these steps:
+**Backend**
+*   **Runtime**: Node.js
+*   **Framework**: Express.js
+*   **Database**: MongoDB Atlas (Mongoose ODM)
+*   **Services**: Google Gemini API (AI), Multer (File Uploads)
 
-1.  **Clone the repository:**
-    ```bash
-    git clone <repository-url>
-    cd neo-timesheet-app
-    ```
-2.  **Install dependencies:**
-    This project uses ESM (ECMAScript Modules) directly in the browser via `importmap`. Therefore, there's no traditional `npm install` for frontend dependencies. However, if you are running a Node.js environment for the backend or local development server, you would typically run:
-    ```bash
-    npm install
-    # or
-    yarn install
-    ```
-3.  **Set up your Google Gemini API Key:**
-    The application uses the Google Gemini API for AI-powered features (e.g., daily plan suggestions). You need to obtain an API key from Google AI Studio.
-    Create a `.env` file in the project root with your API key:
-    ```
-    API_KEY="YOUR_GOOGLE_GEMINI_API_KEY"
-    ```
-    *Note: The `process.env.API_KEY` is assumed to be pre-configured and accessible in the execution context.*
-4.  **Open `index.html`:**
-    Since this is a simple static site using ESM, you can often just open `index.html` directly in your browser or serve it with a simple static file server (e.g., `npx serve .` if you have Node.js installed).
+---
 
-## AI Integration (Google Gemini API)
+## 🚀 Setup & Installation
 
-The application integrates with the Google Gemini API to provide intelligent task allocation suggestions.
-The `suggestDailyPlan` function in `services/geminiService.ts` sends a list of pending tasks to the `gemini-2.5-flash` model. The model then returns a structured JSON array suggesting allocated hours for each task, aiming for an approximate 8-hour workday.
+The project consists of a React frontend (`NEON`) and a Node/Express backend (`neoback_end`).
 
-The API key for Gemini is loaded from `process.env.API_KEY` and is critical for these features to function. If the API key is not configured, AI features will be disabled.
+### Prerequisites
+*   Node.js (v18+)
+*   MongoDB Atlas URI
+*   Google Gemini API Key
+
+### 1. Backend Setup
+Navigate to the backend directory:
+```bash
+cd neoback_end
+npm install
+```
+
+Create a `.env` file in `neoback_end/`:
+```env
+PORT=3000
+MONGODB_URI=your_mongodb_atlas_connection_string
+JWT_SECRET=your_secret_key
+GEMINI_API_KEY=your_gemini_api_key
+```
+
+Run the development server (runs both backend and frontend concurrently):
+```bash
+npm run dev
+```
+
+### 2. Frontend Setup (Standalone)
+If you wish to run the frontend separately:
+```bash
+cd NEON
+npm install
+npm run dev
+```
+
+*Note: The frontend is configured to proxy API requests to `http://localhost:3000` via Vite configuration or Environment Variables.*
+
+---
+
+## 📚 API Documentation
+
+The backend exposes RESTful endpoints for all modules. Key resources include:
+
+*   `/api/auth`: Authentication (Login/Me)
+*   `/api/users`: Employee directory operations
+*   `/api/projects`: Project and configuration management
+*   `/api/tasks`: Task assignment and tracking
+*   `/api/leaves`: Leave applications and approvals
+*   `/api/policies`: Configuration for Leave Types and Work Calendars
+*   `/api/timesheets`: Submission and approval workflows
+
+---
+
+## 🎨 Design Philosophy
+NEO prioritizes a "Rigid yet Beautiful" design system.
+*   **Functional Density**: Information is presented clearly without wasted space.
+*   **Visual Hierarchy**: Uses typography and color (e.g., slate/blue palette) to guide attention.
+*   **Feedback**: Interactive states and micro-animations provide immediate user feedback.
+
+---
+
+© 2025 NEO Interaction Design. All rights reserved.

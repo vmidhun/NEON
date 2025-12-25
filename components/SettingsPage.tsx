@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import DashboardCard from './DashboardCard';
 import { UserRole } from '../types';
 import { JOBS, PROJECTS, CLIENTS } from '../constants';
-import { User, Bell, Settings, Database, Activity } from 'lucide-react';
+import { User, Bell, Settings, Database, Activity, Calendar } from 'lucide-react';
+import HRPolicyConfiguration from './HRPolicyConfiguration';
 
 interface SettingsPageProps {
     currentUserRole: UserRole;
@@ -35,6 +36,13 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ currentUserRole }) => {
 
                   {isAdmin && (
                       <>
+                          <button
+                              onClick={() => setActiveTab('policies')}
+                              className={`${activeTab === 'policies' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
+                          >
+                              <Calendar className="w-4 h-4" />
+                              Leave & Attendance
+                          </button>
                           <button
                               onClick={() => setActiveTab('system')}
                               className={`${activeTab === 'system' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
@@ -97,7 +105,12 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ currentUserRole }) => {
                       </div>
                   </DashboardCard>
               )}
+              {/* Policies Tab (Admin/HR) */}
+              {activeTab === 'policies' && isAdmin && (
+                  <HRPolicyConfiguration />
+              )}
 
+              {/* System Tab (Admin Only) */}
               {/* System Tab (Admin Only) */}
               {activeTab === 'system' && isAdmin && (
                   <div className="space-y-6">

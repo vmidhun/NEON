@@ -1,0 +1,446 @@
+# HR SaaS – Leave & Task Management Requirements
+
+## 1. Overview
+
+This document describes the functional and technical requirements for a multi‑tenant HR SaaS platform focused on:
+
+- Policy‑driven leave management.
+- Employee data and leave seeding.
+- Project, task, and stand‑up calendar management.
+- Role‑based access control (RBAC) for Super Admin, Tenant Admin, Manager, and Employee.
+- AI‑assisted task generation using Google Gemini.
+
+The backend stack is **Express + MongoDB/Mongoose**.
+
+---
+
+## 2. Multi‑Tenant & User Management
+
+### 2.1 Tenants
+
+- The system must support multiple tenants (companies) in a single deployment.
+- Each tenant has:
+  - Name.
+  - Optional domain/identifier.
+  - Status: active / suspended.
+- All business data (employees, leave policies, tasks, etc.) is scoped to a tenant.
+
+### 2.2 Users & Tenant Users
+
+- A **User** is a global identity (email + password).
+- A **TenantUser** binds a User to a specific tenant with additional attributes:
+  - isPrimaryAdmin flag.
+  - Active/inactive status.
+- A single User can belong to multiple tenants (multi‑tenant access).
+
+### 2.3 Roles & Permissions (RBAC)
+
+- Roles: `SUPER_ADMIN`, `TENANT_ADMIN`, `MANAGER`, `EMPLOYEE`.
+- A TenantUser can have multiple roles within a tenant (e.g., MANAGER + EMPLOYEE).
+- Permissions are attached to roles (role → permission mapping).
+- Access control follows least privilege (only the minimum necessary rights for each role).
+
+#### Role Capabilities (High-Level)
+
+- **SUPER_ADMIN**
+  - Manage tenants.
+  - Add/remove tenant admins.
+  - Enable/disable modules per tenant (Leaves, Projects, Timesheets, AI Tasks, Stand‑up).
+  - Impersonate/switch into Tenant Admin view for support/debug, with audit logs.
+
+- **TENANT_ADMIN**
+  - Manage users within tenant (create, update, deactivate).
+  - Assign roles (MANAGER/EMPLOYEE) within tenant.
+  - Enable/disable modules for tenant's users.
+  - Configure default leave policies and work calendars.
+  - Perform bulk leave seeding and adjustments.
+
+- **MANAGER**
+  - Manage team‑level resources (clients, projects, tasks, employees assigned to them).
+  - Approve/reject leave requests for their team.
+  - View team leave calendar and task completion.
+  - Enable AI task generation for themselves (via Google AI key).
+  - Participate in stand‑up sessions with visibility into team tasks.
+
+- **EMPLOYEE**
+  - Self‑service for leaves (apply, view, update/cancel pending).
+  - View and update own tasks and stand‑up items.
+  - Access personal documents.
+  - View assigned clients and projects.
+
+---
+
+## 3. Employee & Policy Model
+
+### 3.1 Employees
+
+- Each employee record is scoped to a tenant and linked to a TenantUser.
+- Attributes:
+  - Employee code.
+  - Designation.
+  - Employment type:
+    - FULL_TIME, INTERN, PROBATION, CLIENT_POLICY.
+  - Join date, exit date.
+  - Manager (reporting manager).
+  - Work calendar assignment.
+  - Current leave policy assignment.
+  - Optional notice period (start/end).
+
+### 3.2 Work Calendars & Holidays
+
+- A work calendar defines:
+  - Timezone.
+  - Working days (e.g., Mon–Fri).
+  - Default working hours (e.g., 9:30–18:30).
+- Holiday sets:
+  - Scoped to a work calendar and tenant.
+  - Distinguish internal vs client‑specific holidays.
+- Employees can be mapped to:
+  - Internal holiday list, or
+  - Client holiday list (for client‑policy employees).
+
+### 3.3 Leave Policies & Types
+
+- Each tenant can have multiple **Leave Policies** (versioned by year).
+- Example: "Neointeraction Leave Policy 2025".
+
+#### Policy Attributes
+
+- Leave year start & end (e.g., 1 Jan – 31 Dec).
+- Carry‑forward rules:
+  - Allowed or not.
+  - Max carry‑forward days.
+- Encashment rules:
+  - Usually disabled (no encashment).
+- Default max continuous leave days.
+- Constraint: LOP > 15 days requires Manager + HR approval.
+
+#### Leave Types
+
+- Configurable list per tenant/policy, e.g.:
+  - PLANNED (annual leave).
+  - SICK.
+  - FLOATING.
+  - HOLIDAY.
+  - MATERNITY / ADOPTION / MISCARRIAGE.
+  - PATERNITY.
+  - MARRIAGE.
+- Attributes:
+  - Annual entitlement days (e.g., 18 days = 12 planned + 6 sick).
+  - Accrual rule: NONE, MONTHLY, YEARLY, PRO_RATA.
+  - Eligibility:
+    - Employment types (FULL_TIME, INTERN, PROBATION, CLIENT_POLICY).
+    - Gender (ANY, MALE, FEMALE).
+    - Minimum service days (e.g., 80 days for maternity).
+  - Max continuous days (override per type).
+  - Flags:
+    - requiresDocument.
+    - requiresManagerApproval.
+    - requiresHrApproval.
+    - isPaid / isSpecialLeave.
+
+### 3.4 Employee Leave Balances & Seeding
+
+#### 3.4.1 Initial Seeding for Existing Employees
+
+- The system must support one‑time bulk seeding of leave balances for existing employees:
+  - Opening balances per leave type.
+  - Used and LOP usage.
+- Inputs via:
+  - Admin UI (tabular form).
+  - CSV/Excel import.
+- All seeding actions are auditable (who, when, before/after values).
+
+#### 3.4.2 Automatic Allocation for New Employees
+
+- When a new employee is added:
+  - A leave policy is assigned (default tenant policy or specific one).
+  - Initial entitlements are auto‑calculated based on:
+    - Employment type.
+    - Join date (pro‑rata within current leave year).
+    - Policy accrual rules (e.g., 1.5 days per month for 18 days/year).
+  - Optionally, employees joining after a cut‑off day (e.g., 15th) receive no leaves for that month.
+- Tenant Admin/Manager can override initial balances with manual adjustment entries.
+
+#### 3.4.3 Policy Assignment per Employee
+
+- Every employee must be linked to a **Leave Policy**.
+- The system must allow:
+  - Default policy at tenant level.
+  - Per‑employee override with an effective date and reason.
+- Changing policy:
+  - May trigger recalculation of future accruals.
+  - Does not retroactively modify historical usage; differences are handled via adjustments.
+
+---
+
+## 4. Leave Lifecycle & Business Rules
+
+### 4.1 Requesting Leaves
+
+- All leave requests must be submitted through the application.
+- Planned leave:
+  - Must be applied at least 7 days in advance (configurable).
+- Emergency/sick leave:
+  - Employee must inform manager/HR via phone/message on the same day, before a configured time (e.g., 9:30 AM local).
+  - Employee must log the leave formally after returning.
+
+#### Leave Request Data
+
+- Leave type.
+- Date range (start, end).
+- Per‑day granularity:
+  - Full day / First half / Second half.
+- Reason (free text).
+- Emergency flags:
+  - isEmergency.
+  - emergencyReportedVia (PHONE/EMAIL/CHAT).
+  - emergencyReportedAt.
+  - notifiedBeforeTime flag.
+- Attachments:
+  - Medical certificate (sick/maternity/miscarriage).
+  - Invitation card (marriage).
+  - Legal custody documents (adoption).
+
+### 4.2 Validation & Limits
+
+- Validation rules:
+  - Check employment type eligibility.
+  - Check leave balance for each leave type.
+  - Compute any excess as LOP (Loss of Pay).
+  - Enforce max continuous leave days:
+    - Default or leave‑type specific.
+    - Not more than two weeks leave at a time, unless overridden.
+- Interns/Probation:
+  - Only one leave per month, no carry‑forward.
+  - Extra leaves become LOP.
+- Client‑policy employees:
+  - Use client holiday list for holiday calculations.
+
+### 4.3 Approvals
+
+- Approval workflow:
+  - Manager approval is mandatory for most leave types.
+  - HR approval may be required for special leaves (Maternity, Adoption, etc.).
+- Approver sees:
+  - Request details (dates, type, reason, attachments).
+  - Employee balances (entitled, used, remaining).
+  - Computed LOP portion.
+- Approver actions:
+  - Approve.
+  - Reject (with comments).
+  - Approve with partial LOP conversion.
+
+### 4.4 LOP & Unauthorized Absence
+
+- LOP is recorded when:
+  - Leave exceeds entitlement.
+  - Employee has no accrued leaves and still takes time off with approval.
+- Unauthorized absence:
+  - No check‑in and no leave request.
+  - System flags such days for HR review and potential disciplinary action.
+- LOP > 15 days:
+  - Requires joint Manager + HR approval.
+
+### 4.5 Notice Period & Leave
+
+- If an employee on notice period takes leave:
+  - Option A: Extend notice period by the number of leave days.
+  - Option B: Treat leave as LOP.
+- The behavior is configurable at policy level.
+
+---
+
+## 5. Project, Task & Stand‑Up Management
+
+### 5.1 Clients & Projects
+
+- Manager (or Tenant Admin) can:
+  - Create/edit/delete clients.
+  - Create/edit/delete projects under clients.
+- Project attributes:
+  - Client reference.
+  - Name, description.
+  - Work calendar and timesheet policy (weekly, bi‑weekly, monthly).
+  - Flag: requires client approval.
+
+### 5.2 Tasks
+
+- Managers:
+  - Create, assign, update, delete tasks for their team.
+- Employees:
+  - View tasks assigned to them.
+  - Update status and progress.
+  - Delete only personal/self‑created tasks (if allowed).
+- Task attributes:
+  - Title, description.
+  - Priority.
+  - Estimated hours.
+  - Due date.
+  - Status (TODO, IN_PROGRESS, DONE, BLOCKED).
+  - Project association.
+  - Assigned employee.
+  - AI‑generated flag.
+  - Stand‑up date (planned discussion day).
+
+### 5.3 Stand‑Up Calendar
+
+- Daily stand‑up per team or project.
+- Stand‑up session:
+  - Date, time, team, created by.
+- Stand‑up view:
+  - Manager:
+    - Sees all team member tasks for the selected day.
+    - Can mark tasks as complete, move to next day, or delete (with audit).
+  - Employee:
+    - Sees only own tasks for the day.
+    - Can mark tasks as done or update status.
+- Metrics during stand‑up:
+  - Tasks planned vs completed per person.
+  - Percentage completion (tasks and hours).
+  - Team‑level completion overview.
+
+### 5.4 AI Task Generation
+
+- Manager can enable AI by:
+  - Providing a Google AI (Gemini) API key in their settings.
+  - The key must be encrypted and stored securely.
+- AI usage:
+  - Manager sends a high‑level description and optional goals.
+  - System calls Gemini to propose tasks.
+  - Manager reviews generated tasks and accepts/edits them before assigning.
+
+---
+
+## 6. Dashboards
+
+### 6.1 Employee Dashboard
+
+- Widgets:
+  - Today's to‑do list:
+    - Tasks that are due today or overdue.
+  - Weekly outlook:
+    - Upcoming tasks.
+  - Leave summary:
+    - Balances per leave type.
+    - Next approved leave date.
+  - Stand‑up summary:
+    - Today's stand‑up tasks and completion status.
+
+### 6.2 Manager Dashboard
+
+- Widgets:
+  - Team leave calendar and who's on leave.
+  - Pending approvals (leaves & timesheets).
+  - Team task completion metrics.
+  - Stand‑up performance summaries.
+
+### 6.3 HR/Tenant Admin View
+
+- Reports:
+  - Leave usage by type, team, employment type.
+  - Special leave usage (Maternity, Paternity, etc.).
+  - LOP and unauthorized absence statistics.
+  - Policy compliance and exceptions.
+- Tools:
+  - Bulk leave seeding and adjustments.
+  - Policy versioning and assignment.
+
+---
+
+## 7. API & Data Requirements (Express + Mongoose)
+
+### 7.1 API Design Principles
+
+- RESTful endpoints, versioned under `/api/v1`.
+- Tenant scoping middleware:
+  - Reads active tenant ID from JWT/session/header.
+  - Applies `tenantId` filter to all queries.
+- RBAC middleware:
+  - Resolves TenantUser → Roles → Permissions on each request.
+  - Rejects unauthorized operations with 403.
+
+### 7.2 Key Endpoints (Summary)
+
+**Auth & Tenant Context**
+
+- `POST /api/v1/auth/login`
+- `GET /api/v1/auth/me`
+- `POST /api/v1/auth/switch-tenant` (SUPER_ADMIN only)
+
+**Employees & Policies**
+
+- `GET /api/v1/employees`
+- `POST /api/v1/employees`
+- `PATCH /api/v1/employees/:id`
+- `POST /api/v1/employees/:id/leave-policy`
+- `GET /api/v1/leave-policies`
+- `POST /api/v1/leave-policies`
+- `GET /api/v1/leave-types`
+- `POST /api/v1/leave-types`
+
+**Leave Seeding & Balances**
+
+- `POST /api/v1/leave-balances/bulk-initialize`
+- `GET /api/v1/me/leave-balances?year=YYYY`
+- `POST /api/v1/employees/:id/leave-adjustments`
+
+**Leave Requests & Approvals**
+
+- `GET /api/v1/me/leave-requests`
+- `POST /api/v1/me/leave-requests`
+- `PATCH /api/v1/me/leave-requests/:id`
+- `DELETE /api/v1/me/leave-requests/:id`
+- `GET /api/v1/leave-requests?status=PENDING&team=mine`
+- `POST /api/v1/leave-requests/:id/approve`
+- `POST /api/v1/leave-requests/:id/reject`
+
+**Clients, Projects, Tasks**
+
+- `GET /api/v1/clients`
+- `POST /api/v1/clients`
+- `GET /api/v1/projects`
+- `POST /api/v1/projects`
+- `GET /api/v1/tasks`
+- `POST /api/v1/tasks`
+- `PATCH /api/v1/tasks/:id`
+- `DELETE /api/v1/tasks/:id`
+
+**Stand‑Up Calendar**
+
+- `GET /api/v1/standup/sessions?date=YYYY-MM-DD`
+- `POST /api/v1/standup/sessions`
+- `GET /api/v1/standup/sessions/:id/tasks`
+- `POST /api/v1/standup/sessions/:id/tasks/:taskId/update`
+
+**AI Settings & Generation**
+
+- `POST /api/v1/managers/me/ai-settings`
+- `GET /api/v1/managers/me/ai-settings`
+- `POST /api/v1/ai/tasks/generate`
+
+---
+
+## 8. Non‑Functional Requirements
+
+- **Security**
+  - JWT‑based authentication.
+  - Encrypted storage for API keys and sensitive data.
+  - Strict tenant isolation on all endpoints.
+- **Auditability**
+  - Track create/update/delete actions for:
+    - Leave balances and adjustments.
+    - Leave requests and approvals.
+    - Policy assignments and changes.
+- **Performance**
+  - Efficient indexes on tenant, employee, and date fields.
+  - Pagination on list endpoints.
+
+---
+
+## 9. Future Extensions (Optional)
+
+- Attendance integration (check‑in/out).
+- Payroll integration for automated LOP deductions.
+- Performance review and goal tracking linked to tasks.
+- Notifications (email/Slack/Teams) for approvals and stand‑ups.

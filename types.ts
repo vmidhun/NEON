@@ -3,6 +3,7 @@ export enum TaskStatus {
   ToDo = 'To Do',
   InProgress = 'In Progress',
   Completed = 'Completed',
+  Blocked = 'Blocked'
 }
 
 export enum UserRole {
@@ -10,6 +11,8 @@ export enum UserRole {
   Manager = 'Manager',
   HR = 'HR',
   Admin = 'Admin',
+  SuperAdmin = 'SuperAdmin',
+  TenantAdmin = 'TenantAdmin'
 }
 
 export interface Team {
@@ -26,6 +29,11 @@ export interface Project {
   id: string;
   name: string;
   client: Client;
+  workCalendarId?: string;
+  timesheetConfig?: {
+    submissionFrequency: 'Weekly' | 'Bi-Weekly' | 'Monthly';
+    requireClientApproval: boolean;
+  };
 }
 
 export interface Job {
@@ -37,10 +45,16 @@ export interface Job {
 export interface Task {
   id: string;
   name: string;
+  description?: string;
   job: Job;
+  project?: Project;
   allocatedHours: number;
   status: TaskStatus;
+  priority?: 'Low' | 'Medium' | 'High';
+  dueDate?: string;
   assignedBy?: string;
+  assignedTo?: string; // Employee ID
+  isAiGenerated?: boolean;
 }
 
 export interface TimeLog {
@@ -69,7 +83,7 @@ export interface EmploymentDetails {
   empId?: string;
   doj?: string;
   confirmationDate?: string;
-  employmentType?: 'Full-time' | 'Contract' | 'Intern';
+  employmentType?: 'Full-time' | 'Contract' | 'Intern' | 'Probation' | 'Client-Policy';
   employmentStatus?: 'Active' | 'Notice Period' | 'Terminated' | 'Sabbatical';
   officialDesignation?: string;
   workLocation?: string;
@@ -108,7 +122,7 @@ export interface LeaveBalance {
     carriedOver: number;
 }
 
-export type LeaveType = 'Annual' | 'Sick' | 'Casual' | 'Maternity' | 'Paternity' | 'LossOfPay';
+export type LeaveType = 'Annual' | 'Sick' | 'Casual' | 'Maternity' | 'Paternity' | 'LossOfPay' | 'Marriage' | 'Floating' | 'Holiday';
 
 export interface LeaveRequest {
     _id: string;
@@ -123,6 +137,12 @@ export interface LeaveRequest {
     rejectionReason?: string;
     isLossOfPay: boolean;
     createdAt?: string;
+
+    // Emergency fields
+    isEmergency?: boolean;
+    emergencyReportedVia?: 'Phone' | 'Email' | 'Chat';
+    emergencyReportedAt?: string;
+    attachments?: string[]; // URLs
 }
 
 export interface EmergencyContact {
@@ -151,4 +171,17 @@ export interface Employee {
     financialDetails?: FinancialDetails;
     documents?: Documents;
     emergencyContacts?: EmergencyContact[];
+}
+
+export interface StandupSession {
+    id: string;
+    date: string;
+    teamId: string;
+    createdBy: string;
+    tasks: {
+        taskId: string;
+        employeeId: string;
+        status: TaskStatus;
+        notes?: string;
+    }[];
 }

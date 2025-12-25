@@ -158,7 +158,7 @@ export const api = {
     },
 
     // --- Leave Management ---
-    applyLeave: async (data: { leaveType: string, startDate: string, endDate: string, reason: string }) => {
+    applyLeave: async (data: any) => {
         const res = await fetch(`${API_BASE_URL}/leaves/apply`, {
             method: 'POST',
             headers: getHeaders(),
@@ -195,5 +195,80 @@ export const api = {
         const res = await fetch(`${API_BASE_URL}/leaves/calendar`, { headers: getHeaders() });
         if (!res.ok) throw new Error('Failed to fetch team leaves');
         return res.json();
+    },
+
+    // --- Time Logs ---
+    getTimeLogs: async () => {
+        const res = await fetch(`${API_BASE_URL}/timelogs`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed to fetch time logs');
+        return res.json();
+    },
+    createTimeLog: async (data: any) => {
+        const res = await fetch(`${API_BASE_URL}/timelogs`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error('Failed to create time log');
+        return res.json();
+    },
+
+    // --- Timesheets ---
+    getTimesheets: async (params?: any) => {
+        const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+        const res = await fetch(`${API_BASE_URL}/timesheets${qs}`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed to fetch timesheets');
+        return res.json();
+    },
+    submitTimesheet: async (data: any) => {
+        const res = await fetch(`${API_BASE_URL}/timesheets/submit`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error('Failed to submit timesheet');
+        return res.json();
+    },
+    updateTimesheetStatus: async (id: string, data: any) => {
+        const res = await fetch(`${API_BASE_URL}/timesheets/${id}/status`, {
+            method: 'PUT',
+            headers: getHeaders(),
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error('Failed to update timesheet status');
+        return res.json();
+    },
+
+    // --- Generic Helpers (for new modules) ---
+    get: async (endpoint: string) => {
+        const res = await fetch(`${API_BASE_URL}${endpoint}`, { headers: getHeaders() });
+        if (!res.ok) throw new Error(`GET ${endpoint} failed`);
+        return res.json();
+    },
+    post: async (endpoint: string, data: any) => {
+        const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`POST ${endpoint} failed`);
+        return res.json();
+    },
+    put: async (endpoint: string, data: any) => {
+        const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+            method: 'PUT',
+            headers: getHeaders(),
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`PUT ${endpoint} failed`);
+        return res.json();
+    },
+    delete: async (endpoint: string) => {
+        const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+            method: 'DELETE',
+            headers: getHeaders()
+        });
+        if (!res.ok) throw new Error(`DELETE ${endpoint} failed`);
+        return true;
     },
 };
