@@ -4,7 +4,7 @@ import { UserRole } from '../types';
 import { JOBS, PROJECTS, CLIENTS } from '../constants';
 import { User, Bell, Settings, Database, Activity, Calendar, Shield } from 'lucide-react';
 import HRPolicyConfiguration from './HRPolicyConfiguration';
-import { useAuth } from '../AuthContext';
+import { useAuth, API_BASE_URL } from '../AuthContext';
 import { CreditCard, CheckCircle, XCircle } from 'lucide-react';
 
 interface SettingsPageProps {
@@ -23,7 +23,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ currentUserRole }) => {
             const fetchPermissions = async () => {
                 const token = localStorage.getItem('jwtToken');
                 try {
-                    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/tenant/permissions`, {
+                    const res = await fetch(`${API_BASE_URL}/tenant/permissions`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     if (res.ok) {
@@ -52,7 +52,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ currentUserRole }) => {
             const fetchPermissions = async () => {
                 const token = localStorage.getItem('jwtToken');
                 try {
-                    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/tenant/permissions`, {
+                    const res = await fetch(`${API_BASE_URL}/tenant/permissions`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     if (res.ok) {
@@ -70,7 +70,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ currentUserRole }) => {
     const savePermissions = async () => {
         const token = localStorage.getItem('jwtToken');
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/tenant/permissions`, {
+            const res = await fetch(`${API_BASE_URL}/tenant/permissions`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -310,7 +310,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ currentUserRole }) => {
                                                       const token = localStorage.getItem('jwtToken');
                                                       try {
                                                           // 1. Get current settings
-                                                          const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/tenant/settings`, {
+                                                          const res = await fetch(`${API_BASE_URL}/tenant/settings`, {
                                                               headers: { 'Authorization': `Bearer ${token}` }
                                                           });
                                                           const settings = await res.json();
@@ -323,7 +323,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ currentUserRole }) => {
                                                           }
 
                                                           // 2. Save
-                                                          await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/tenant/settings`, {
+                                                          await fetch(`${API_BASE_URL}/tenant/settings`, {
                                                               method: 'PUT',
                                                               headers: {
                                                                   'Content-Type': 'application/json',
