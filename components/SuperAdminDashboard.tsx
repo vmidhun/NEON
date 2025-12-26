@@ -18,6 +18,7 @@ import {
     Trash
 } from 'lucide-react';
 import { useAuth } from '../AuthContext';
+import TenantSettings from './TenantSettings';
 
 // Types for Super Admin
 interface Tenant {
@@ -76,6 +77,9 @@ const SuperAdminDashboard: React.FC = () => {
     const [isEditingPlan, setIsEditingPlan] = useState(false);
     const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
     
+    // Tenant Settings View
+    const [viewSettingsTenantId, setViewSettingsTenantId] = useState<string | null>(null);
+
     interface PlanFeature {
         key: string;
         type: 'BOOLEAN' | 'NUMERIC';
@@ -116,6 +120,7 @@ const SuperAdminDashboard: React.FC = () => {
 
     useEffect(() => {
         fetchData();
+        setViewSettingsTenantId(null);
     }, [activeTab]);
 
     const fetchData = async () => {
@@ -212,16 +217,10 @@ const SuperAdminDashboard: React.FC = () => {
     const handleManageSubscription = (tenant: Tenant) => {
         setSelectedTenant(tenant);
         setSubscriptionForm({
-            planId: tenant.subscription?.plan?._id || '', // Need to ensure plan object has _id populated or access differently? 
-            // The type definition says plan: { name, code }, doesn't explicit _id. 
-            // Let's assume the backend populates _id or we need to refine the type.
-            // Backend `getTenants` populates('plan', 'name code'). Mongoose includes _id by default.
-            // So we can casting or updating type.
+            planId: tenant.subscription?.plan?._id || '', 
             status: tenant.subscription?.status || 'TRIAL'
         });
         // Hack: Need plan ID to pre-select. 
-        // Let's rely on finding plan by code if _id missing, or assume _id is there.
-        // Actually, let's update the Tenant type briefly or cast.
         const planId = (tenant.subscription?.plan as any)?._id || '';
         setSubscriptionForm({
              planId,
@@ -321,7 +320,7 @@ const SuperAdminDashboard: React.FC = () => {
                     </div>
                 )}
 
-                {activeTab === 'tenants' && (
+                {activeTab === 'tenants' && !viewSettingsTenantId && (
                      <div className="space-y-6">
                         <div className="flex justify-between items-center">
                             <h2 className="text-2xl font-bold text-slate-800">Tenant Management</h2>
@@ -347,7 +346,12 @@ const SuperAdminDashboard: React.FC = () => {
                                 <tbody className="divide-y divide-slate-100">
                                     {tenants.map(tenant => (
                                         <tr key={tenant._id} className="hover:bg-slate-50">
-                                            <td className="px-6 py-4 font-medium text-slate-900">{tenant.name}</td>
+                                            <td
+                                                className="px-6 py-4 font-medium text-slate-900 cursor-pointer hover:text-blue-600 hover:underline"
+                                                onClick={() => setViewSettingsTenantId(tenant._id)}
+                                            >
+                                                {tenant.name}
+                                            </td>
                                             <td className="px-6 py-4 text-slate-600">{tenant.domain || '-'}</td>
                                             <td className="px-6 py-4 text-slate-600">
                                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -387,6 +391,13 @@ const SuperAdminDashboard: React.FC = () => {
                             )}
                         </div>
                      </div>
+                )}
+
+                {activeTab === 'tenants' && viewSettingsTenantId && (
+                    <TenantSettings
+                        tenantId={viewSettingsTenantId}
+                        onBack={() => setViewSettingsTenantId(null)}
+                    />
                 )}
 
                 {activeTab === 'plans' && (
