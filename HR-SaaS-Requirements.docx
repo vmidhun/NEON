@@ -444,3 +444,4 @@ The backend stack is **Express + MongoDB/Mongoose**.
 - Payroll integration for automated LOP deductions.
 - Performance review and goal tracking linked to tasks.
 - Notifications (email/Slack/Teams) for approvals and stand‑ups.
+

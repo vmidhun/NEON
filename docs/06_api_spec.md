@@ -25,4 +25,4 @@ All protected endpoints require a JSON Web Token (JWT) provided in the `Authoriz
 #### `GET /auth/me`
 **Description:** Retrieves the authenticated user's details. Used for session validation on boot.
 
-... (rest of the existing specification remains valid)
+... (See actual implementation and super-admin-api.md for more)

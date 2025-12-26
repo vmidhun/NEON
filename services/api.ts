@@ -138,6 +138,15 @@ export const api = {
         if (!res.ok) throw new Error('Failed to update user');
         return res.json();
     },
+    bulkUpdateUsers: async (userIds: string[], updates: any) => {
+        const res = await fetch(`${API_BASE_URL}/users/bulk`, {
+            method: 'PUT',
+            headers: getHeaders(),
+            body: JSON.stringify({ userIds, updates })
+        });
+        if (!res.ok) throw new Error('Failed to update users');
+        return res.json();
+    },
     deleteUser: async (id: string) => {
         const res = await fetch(`${API_BASE_URL}/users/${id}`, {
             method: 'DELETE',

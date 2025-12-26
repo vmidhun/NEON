@@ -26,17 +26,25 @@ const LoginPage: React.FC = () => {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
+      const text = await response.text();
+      let data;
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (e) {
+        console.error("Failed to parse login response:", text);
+        throw new Error("The server returned an invalid response. Please try again later.");
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || 'Login failed. Please check your credentials.');
+        throw new Error(data.error || data.message || `Login failed. Server responded with ${response.status}`);
       }
 
       const user: Employee = {
-        id: data.user.id,
+        _id: data.user._id || data.user.id,
+        id: data.user.id || data.user._id,
         name: data.user.name,
         email: data.user.email,
-        role: data.user.role as UserRole,
+        role: data.user.role as UserRole, // Backend sends 'SuperAdmin', matches enum
         avatarUrl: data.user.avatarUrl,
         teamId: data.user.teamId,
       };
@@ -190,6 +198,9 @@ const LoginPage: React.FC = () => {
                     ) : 'Sign In'}
                 </button>
                 </form>
+              <div className="mt-6 text-center text-xs text-slate-400">
+                <p>Dev Hint: Super Admin: admin@neo.com / admin</p>
+              </div>
             </>
         )}
       </div>

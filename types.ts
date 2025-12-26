@@ -12,7 +12,8 @@ export enum UserRole {
   HR = 'HR',
   Admin = 'Admin',
   SuperAdmin = 'SuperAdmin',
-  TenantAdmin = 'TenantAdmin'
+  TenantAdmin = 'TenantAdmin',
+  Accountant = 'Accountant'
 }
 
 export interface Team {

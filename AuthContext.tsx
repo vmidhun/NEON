@@ -8,8 +8,11 @@ interface AuthState {
   isLoggedIn: boolean;
   user: Employee | null;
   token: string | null;
+  entitlements: Record<string, any> | null;
+  plan: any | null;
   login: (token: string, user: Employee) => void;
   logout: () => void;
+  refreshEntitlements: () => Promise<void>;
   isInitializing: boolean;
 }
 
@@ -19,6 +22,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<Employee | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [entitlements, setEntitlements] = useState<Record<string, any> | null>(null);
+  const [plan, setPlan] = useState<any | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
 
   const logout = () => {
@@ -26,7 +31,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem('currentUser');
     setToken(null);
     setUser(null);
+    setEntitlements(null);
+    setPlan(null);
     setIsLoggedIn(false);
+  };
+
+  const fetchEntitlements = async (authToken: string) => {
+    try {
+      const entRes = await fetch(`${API_BASE_URL}/tenant/entitlements`, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      if (entRes.ok) {
+        const entData = await entRes.json();
+        setEntitlements(entData.features);
+        setPlan(entData.plan);
+      }
+    } catch (e) { console.error("Failed to fetch entitlements", e); }
   };
 
   const login = (newToken: string, newUser: Employee) => {
@@ -35,6 +55,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setToken(newToken);
     setUser(newUser);
     setIsLoggedIn(true);
+    if (newUser.role !== UserRole.SuperAdmin) {
+      fetchEntitlements(newToken);
+    }
+  };
+
+  const refreshEntitlements = async () => {
+    if (token) await fetchEntitlements(token);
   };
 
   useEffect(() => {
@@ -57,13 +84,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setToken(storedToken);
           setUser(userData);
           setIsLoggedIn(true);
+
+          if (userData.role !== 'SuperAdmin') {
+            await fetchEntitlements(storedToken);
+          }
         } else {
           logout();
         }
       } catch (error) {
         console.error("Session verification failed:", error);
-        // On network error, we might want to keep the local state if offline, 
-        // but for a strict "proper login" we logout if the server is unreachable.
         logout();
       } finally {
         setIsInitializing(false);
@@ -74,7 +103,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, user, token, login, logout, isInitializing }}>
+    <AuthContext.Provider value={{ isLoggedIn, user, token, entitlements, plan, login, logout, refreshEntitlements, isInitializing }}>
       {children}
     </AuthContext.Provider>
   );

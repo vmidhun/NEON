@@ -6,6 +6,7 @@ import EmployeeDashboard from './components/EmployeeDashboard';
 import ManagerDashboard from './components/ManagerDashboard';
 import ReportsDashboard from './components/ReportsDashboard';
 import AdminDashboard from './components/AdminDashboard';
+import SuperAdminDashboard from './components/SuperAdminDashboard';
 import ProjectsPage from './components/ProjectsPage';
 import TasksPage from './components/TasksPage';
 import TeamPage from './components/TeamPage';
@@ -14,11 +15,12 @@ import TimesheetPage from './components/TimesheetPage';
 import StandupPage from './components/StandupPage';
 import ReportsPage from './components/ReportsPage';
 import SettingsPage from './components/SettingsPage';
+import HelpCenter from './components/HelpCenter';
 import LoginPage from './LoginPage';
 import { AuthProvider, useAuth } from './AuthContext';
 
 const MainAppContent: React.FC = () => {
-  const { user, isLoggedIn } = useAuth();
+  const { user, isLoggedIn, entitlements } = useAuth();
   const availableRoles = [UserRole.Employee, UserRole.Manager, UserRole.HR, UserRole.Admin];
   const [currentViewRole, setCurrentViewRole] = useState<UserRole>(user?.role || UserRole.Employee);
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -37,8 +39,21 @@ const MainAppContent: React.FC = () => {
     setCurrentPage(page);
   };
 
+  const isEnabled = (key: string) => {
+    if (!entitlements) return true;
+    return entitlements[key]?.value === true;
+  };
+
   const renderContent = () => {
     if (!user) return null;
+
+    // Feature Gates
+    if (currentPage === 'projects' && !isEnabled('project_management')) return <div className="p-8 text-center text-slate-500">Feature not enabled in your plan.</div>;
+    if (currentPage === 'tasks' && !isEnabled('project_management')) return <div className="p-8 text-center text-slate-500">Feature not enabled in your plan.</div>;
+    if (currentPage === 'timesheets' && !isEnabled('timesheet')) return <div className="p-8 text-center text-slate-500">Feature not enabled in your plan.</div>;
+    if (currentPage === 'standup' && !isEnabled('team_standup')) return <div className="p-8 text-center text-slate-500">Feature not enabled in your plan.</div>;
+    if (currentPage === 'leaves' && !isEnabled('leave_management')) return <div className="p-8 text-center text-slate-500">Feature not enabled in your plan.</div>;
+    if (currentPage === 'reports' && !isEnabled('reports')) return <div className="p-8 text-center text-slate-500">Feature not enabled in your plan.</div>;
 
     if (currentPage === 'projects') return <ProjectsPage />;
     if (currentPage === 'tasks') return <TasksPage />;
@@ -48,6 +63,7 @@ const MainAppContent: React.FC = () => {
     if (currentPage === 'leaves') return <LeavePage />;
     if (currentPage === 'reports') return <ReportsPage />;
     if (currentPage === 'settings') return <SettingsPage currentUserRole={currentViewRole} />;
+    if (currentPage === 'help') return <HelpCenter currentUserRole={currentViewRole} />;
 
     switch (currentViewRole) {
       case UserRole.Employee:
@@ -58,6 +74,8 @@ const MainAppContent: React.FC = () => {
         return <ReportsDashboard currentUser={user} />;
       case UserRole.Admin:
         return <AdminDashboard currentUser={user} />;
+      case UserRole.SuperAdmin:
+        return <SuperAdminDashboard />;
       default:
         return <EmployeeDashboard currentUser={user} />;
     }
@@ -67,12 +85,22 @@ const MainAppContent: React.FC = () => {
     return null;
   }
 
+  if (user.role === UserRole.SuperAdmin) {
+    console.log("Rendering SuperAdminDashboard for user:", user);
+    return <SuperAdminDashboard />;
+  }
+
+  console.log("Current User Role:", user.role, "Visible View:", currentViewRole);
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       <Sidebar
         currentRole={currentViewRole}
         activePage={currentPage}
         onNavigate={handleNavigate}
+        currentUser={user}
+        availableRoles={availableRoles}
+        onRoleChange={handleRoleChange}
       />
       <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
         <Header
@@ -81,7 +109,7 @@ const MainAppContent: React.FC = () => {
         onRoleChange={handleRoleChange}
         currentViewRole={currentViewRole}
       />
-        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {renderContent()}
         </main>
       </div>

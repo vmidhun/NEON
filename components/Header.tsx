@@ -14,7 +14,7 @@ const Header: React.FC<HeaderProps> = ({ currentUser, availableRoles, onRoleChan
   const { logout } = useAuth();
 
   return (
-    <header className="bg-white shadow-sm mb-8">
+    <header className="bg-white shadow-sm mb-8 lg:hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           <div className="flex items-center gap-3 lg:hidden">
